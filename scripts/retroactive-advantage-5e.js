@@ -18,17 +18,32 @@ class RetroAdvantage5e {
    * Helper method to grab a new d20 result
    * @returns 
    */
-  static async _rollExtraD20() {
-    return new Roll('1d20').evaluate({async: true});
+  static async _rollExtraD20(dsnOptions) {
+    const roll = await new Roll('1d20').evaluate({async: true});
+
+    if (game.modules.get('dice-so-nice')?.active) {
+      await game.dice3d.showForRoll(
+        roll,
+        game.users.get(dsnOptions?.userId),
+        true,
+        dsnOptions?.whisper?.length ? dsnOptions.whisper : null,
+        dsnOptions?.blind,
+        null,
+        dsnOptions?.speaker
+      );
+    }
+
+    return roll;
   }
   
   /**
    * Handles creating a new D20Roll instance with the updated roll method and totals based on a given one
    * @param {D20Roll} d20Roll - the original instance
    * @param {AdvantageMode} newAdvMode - CONFIG.Dice.D20Roll.ADV_MODE
+   * @param {object} [dsnOptions] - Options passed to Dice So Nice for the new roll if necessary
    * @returns {D20Roll} - a new D20Roll instance with the updated details
    */
-  static async _makeNewRoll(d20Roll, newAdvMode) {
+  static async _makeNewRoll(d20Roll, newAdvMode, dsnOptions) {
     if (newAdvMode === undefined) {
       throw new Error('you must provide what the New Advantage mode is')
     }
@@ -80,7 +95,7 @@ class RetroAdvantage5e {
   
         // if this d20Term doesn't already have more than 1 rolled value, add a new one
         if (d20Term.number === 1) {
-          const newD20 = await this._rollExtraD20();
+          const newD20 = await this._rollExtraD20(dsnOptions);
           d20Term.results.push(...newD20.terms[0].results);
         }
         break;
@@ -91,7 +106,7 @@ class RetroAdvantage5e {
   
         // if this d20Term doesn't already have more than 1 rolled value, add a new one
         if (d20Term.number === 1) {
-          const newD20 = await this._rollExtraD20();
+          const newD20 = await this._rollExtraD20(dsnOptions);
           d20Term.results.push(...newD20.terms[0].results);
         }
         break;
@@ -148,25 +163,34 @@ class RetroAdvantage5e {
       }
   
       let newD20Roll;
+
+      const dsnOptions = {
+        userId: chatMessage.data.user,
+        whisper: chatMessage.data.whisper,
+        blind: chatMessage.data.blind,
+        speaker: chatMessage.data.speaker,
+      };
   
       switch (action) {
         case 'dis': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, DISADVANTAGE);
+          newD20Roll = await this._makeNewRoll(chatMessage.roll, DISADVANTAGE, dsnOptions);
           break;
         }
         case 'norm': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, NORMAL);
+          newD20Roll = await this._makeNewRoll(chatMessage.roll, NORMAL, dsnOptions);
           break;
         }
         case 'adv': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, ADVANTAGE);
+          newD20Roll = await this._makeNewRoll(chatMessage.roll, ADVANTAGE, dsnOptions);
           break;
         }
       }
   
       const newMessageData = await newD20Roll.toMessage({}, { create: false });
+      // remove fields we definitely don't want to update
       delete newMessageData.timestamp;
       delete newMessageData.user;
+      delete newMessageData.whisper;
   
       const messageUpdate = foundry.utils.mergeObject(
         chatMessage.toJSON(),
