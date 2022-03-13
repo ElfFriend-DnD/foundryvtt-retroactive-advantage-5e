@@ -1,11 +1,17 @@
 class RetroAdvantage5e {
   static MODULE_NAME = "retroactive-advantage-5e";
   static MODULE_TITLE = "Retroactive Advantage DnD5e";
+  static SOCKET;
 
   static log(...args) {
     if (game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.MODULE_NAME)) {
       console.log(this.MODULE_TITLE, '|', ...args);
     }
+  }
+
+  static initSocket = () => {
+    this.SOCKET = socketlib.registerModule(this.MODULE_NAME);
+    this.SOCKET.register('handleChatButton', this._handleChatButton);
   }
 
   /**
@@ -114,11 +120,20 @@ class RetroAdvantage5e {
   }
   
   /**
+   * Requests that the GM execute the message update to bypass permissions issue
+   * @param {*} action 
+   * @param {*} messageId 
+   */
+  static async _handleRequestChatButton(action, messageId) {
+    return this.SOCKET.executeAsGM(this._handleChatButton, action, messageId);
+  }
+
+  /**
    * Handles our button clicks from the chat log
    * @param {string} action 
    * @param {string} messageId 
    */
-  static async _handleButtonClick(action, messageId) {
+  static _handleChatButton = async (action, messageId) => {
     try {
       const {
         DISADVANTAGE,
@@ -151,18 +166,20 @@ class RetroAdvantage5e {
   
       const newMessageData = await newD20Roll.toMessage({}, { create: false });
       delete newMessageData.timestamp;
+      delete newMessageData.user;
   
       const messageUpdate = foundry.utils.mergeObject(
         chatMessage.toJSON(),
         newMessageData,
       );
-  
+
       this.log('New stuff d20 roll', { roll: chatMessage.roll, newD20Roll }, {
         chatMessage,
         newMessageData,
         messageUpdate
       });
   
+      // currently seems broken for players without socket workaround
       return chatMessage.update(messageUpdate);
     } catch (err) {
       console.error('A problem occurred with Retroactive Advantage 5e:', err);
@@ -188,7 +205,7 @@ class RetroAdvantage5e {
           return;
         }
 
-        RetroAdvantage5e._handleButtonClick(action, messageId);
+        RetroAdvantage5e._handleRequestChatButton(action, messageId);
       });
     });
 
@@ -196,7 +213,7 @@ class RetroAdvantage5e {
      * Adorn any chat message with a d20 roll with our buttons
      */
     Hooks.on('renderChatMessage', async (chatMessage, [html]) => {
-      if (!chatMessage.isRoll || !(chatMessage.roll instanceof CONFIG.Dice.D20Roll)) {
+      if (!(chatMessage.isAuthor || chatMessage.isOwner) || !chatMessage.isRoll || !(chatMessage.roll instanceof CONFIG.Dice.D20Roll)) {
         return;
       }
 
@@ -229,3 +246,5 @@ Hooks.on("init", RetroAdvantage5e.init);
 Hooks.once('devModeReady', ({ registerPackageDebugFlag }) => {
   registerPackageDebugFlag(RetroAdvantage5e.MODULE_NAME);
 });
+
+Hooks.once("socketlib.ready", RetroAdvantage5e.initSocket);
