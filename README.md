@@ -18,6 +18,10 @@ Provides buttons for any D20 roll chat card to change the roll's advantage statu
 For example:
 If a d20 roll was rolled with advantage, the user will be able to set that to not have advantage or to instead be at disadvantage.
 
+![image](https://user-images.githubusercontent.com/7644614/158040863-e9917091-73a5-43a5-800d-8846138ffb6c.png)
+
+https://user-images.githubusercontent.com/7644614/158040905-cc9a94ee-6581-4c2c-badf-6de144d5997f.mp4
+
 ## Out of Scope
 
 This module does not interact with any other module which might rely on the results of a dice roll (for example "Attack Roll Check D&D5e"). Any automations based on attack rolls, saving throws, etc would be far too complex to attempt to 'undo and redo' with the new result.
