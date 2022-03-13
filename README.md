@@ -24,7 +24,12 @@ https://user-images.githubusercontent.com/7644614/158040905-cc9a94ee-6581-4c2c-b
 
 ## Out of Scope
 
-This module does not interact with any other module which might rely on the results of a dice roll (for example "Attack Roll Check D&D5e"). Any automations based on attack rolls, saving throws, etc would be far too complex to attempt to 'undo and redo' with the new result.
+This module does not interact with any other module which might rely on the results of a dice roll (for example "Attack Roll Check D&D5e"). Any automations based on attack rolls, saving 
+throws, etc would be far too complex to attempt to 'undo and redo' with the new result.
+
+## To Do
+
+- Add Better Support for Halfling Luck and Elven Accuracy special traits
 
 ## Compatibility
 
