@@ -1,4 +1,4 @@
-export class RetroAdvantage5e {
+class RetroAdvantage5e {
   static MODULE_NAME = "retroactive-advantage-5e";
   static MODULE_TITLE = "Retroactive Advantage DnD5e";
 
