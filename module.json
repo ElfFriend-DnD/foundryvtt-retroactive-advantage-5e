@@ -2,7 +2,7 @@
   "name": "retroactive-advantage-5e",
   "title": "Retroactive Advantage DnD5e",
   "description": "A module which allows rerolling d20 rolls from chat.",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "author": "Andrew Krigline",
   "authors": [
     {
