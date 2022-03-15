@@ -15,35 +15,13 @@ class RetroAdvantage5e {
   }
 
   /**
-   * Helper method to grab a new d20 result
-   * @returns 
-   */
-  static async _rollExtraD20(dsnOptions) {
-    const roll = await new Roll('1d20').evaluate({async: true});
-
-    if (game.modules.get('dice-so-nice')?.active) {
-      await game.dice3d.showForRoll(
-        roll,
-        game.users.get(dsnOptions?.userId),
-        true,
-        dsnOptions?.whisper?.length ? dsnOptions.whisper : null,
-        dsnOptions?.blind,
-        null,
-        dsnOptions?.speaker
-      );
-    }
-
-    return roll;
-  }
-  
-  /**
    * Handles creating a new D20Roll instance with the updated roll method and totals based on a given one
    * @param {D20Roll} d20Roll - the original instance
    * @param {AdvantageMode} newAdvMode - CONFIG.Dice.D20Roll.ADV_MODE
-   * @param {object} [dsnOptions] - Options passed to Dice So Nice for the new roll if necessary
+   * @param {object} [messageOptions] - Options passed to Dice So Nice for the new roll if necessary
    * @returns {D20Roll} - a new D20Roll instance with the updated details
    */
-  static async _makeNewRoll(d20Roll, newAdvMode, dsnOptions) {
+  static async _makeNewRoll(d20Roll, newAdvMode, messageOptions) {
     if (newAdvMode === undefined) {
       throw new Error('you must provide what the New Advantage mode is')
     }
@@ -81,45 +59,48 @@ class RetroAdvantage5e {
     newD20Roll.terms = [...d20Roll.terms];
   
     let d20Term = newD20Roll.terms[0];
+    // original roll mods without the kh or kl modifiers
+    const filteredModifiers = d20Term.modifiers.filter((modifier) => !['kh', 'kl'].includes(modifier));
+    const originalResultsLength = d20Term.results.length;
+    // reset roll to not have the kh or kl modifiers
+    d20Term.modifiers = [...filteredModifiers];
   
     // do stuff to the terms and modifiers
     switch (newAdvMode) {
       case (NORMAL): {
-        d20Term.modifiers = [];
         d20Term.results = [d20Term.results.shift()]; // keep only the result of the first element of the array
         break;
       }
   
       case (ADVANTAGE): {
-        d20Term.modifiers = ['kh'];
+        d20Term.modifiers.push('kh');
   
         // if this d20Term doesn't already have more than 1 rolled value, add a new one
         if (d20Term.number === 1) {
-          const newD20 = await this._rollExtraD20(dsnOptions);
-          d20Term.results.push(...newD20.terms[0].results);
+          d20Term.roll();
         }
         break;
       }
   
       case (DISADVANTAGE): {
-        d20Term.modifiers = ['kl'];
+        d20Term.modifiers.push('kl');
   
         // if this d20Term doesn't already have more than 1 rolled value, add a new one
         if (d20Term.number === 1) {
-          const newD20 = await this._rollExtraD20(dsnOptions);
-          d20Term.results.push(...newD20.terms[0].results);
+          d20Term.roll();
         }
         break;
       }
     }
-  
-    // set the number of dice correctly with the new terms length
-    d20Term.number = d20Term.results.length;
+
+    // clear out term flavor to prevent "Reliable Talent" loop
+    d20Term.options.flavor = undefined;
   
     // mutate each term to reset to pre-evaluateModifiers state
     d20Term.results.forEach((term) => {
       term.active = true; // all terms start as active
       delete term.discarded; // no terms start as discarded
+      delete term.indexThrow; // wtf is indexThrow
     })
   
     // handle new terms based on the roll modifiers
@@ -131,9 +112,29 @@ class RetroAdvantage5e {
     // re-evaluate total after adjusting the terms
     newD20Roll._total = newD20Roll._evaluateTotal();
   
+    // After evaluating modifiers again, Create a Fake Roll result and roll for dice so nice to roll the new dice.
+    // We have to do this after modifiers because of stuff like halfling luck which might spawn more dice.
+    if (game.modules.get('dice-so-nice')?.active && d20Term.results.length > originalResultsLength) {
+      const fakeD20Roll = Roll.fromTerms([new Die({...d20Term})]);
+
+      // we are being extra and only rolling the new dice
+      fakeD20Roll.terms[0].results = fakeD20Roll.terms[0].results.filter((foo, index) => index > 0);
+      fakeD20Roll.terms[0].number = fakeD20Roll.terms[0].results.length;
+
+      await game.dice3d.showForRoll(
+        fakeD20Roll,
+        game.users.get(messageOptions?.userId),
+        true,
+        messageOptions?.whisper?.length ? messageOptions.whisper : null,
+        messageOptions?.blind,
+        null,
+        messageOptions?.speaker
+      );
+    }
+
     return newD20Roll;
   }
-  
+
   /**
    * Requests that the GM execute the message update to bypass permissions issue
    * @param {*} action 
@@ -164,7 +165,7 @@ class RetroAdvantage5e {
   
       let newD20Roll;
 
-      const dsnOptions = {
+      const messageOptions = {
         userId: chatMessage.data.user,
         whisper: chatMessage.data.whisper,
         blind: chatMessage.data.blind,
@@ -173,15 +174,15 @@ class RetroAdvantage5e {
   
       switch (action) {
         case 'dis': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, DISADVANTAGE, dsnOptions);
+          newD20Roll = await this._makeNewRoll(chatMessage.roll, DISADVANTAGE, messageOptions);
           break;
         }
         case 'norm': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, NORMAL, dsnOptions);
+          newD20Roll = await this._makeNewRoll(chatMessage.roll, NORMAL, messageOptions);
           break;
         }
         case 'adv': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, ADVANTAGE, dsnOptions);
+          newD20Roll = await this._makeNewRoll(chatMessage.roll, ADVANTAGE, messageOptions);
           break;
         }
       }
