@@ -191,6 +191,7 @@ class RetroAdvantage5e {
       delete newMessageData.timestamp;
       delete newMessageData.user;
       delete newMessageData.whisper;
+      delete newMessageData.speaker;
   
       const messageUpdate = foundry.utils.mergeObject(
         chatMessage.toJSON(),
