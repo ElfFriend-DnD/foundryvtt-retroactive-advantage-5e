@@ -22,14 +22,15 @@ If a d20 roll was rolled with advantage, the user will be able to set that to no
 
 https://user-images.githubusercontent.com/7644614/158040905-cc9a94ee-6581-4c2c-badf-6de144d5997f.mp4
 
+### Actor special trait support
+- Halfling Luck
+- Reliable Talent
+- ~~Elven Accuracy~~ Not supported
+
 ## Out of Scope
 
 This module does not interact with any other module which might rely on the results of a dice roll (for example "Attack Roll Check D&D5e"). Any automations based on attack rolls, saving 
 throws, etc would be far too complex to attempt to 'undo and redo' with the new result.
-
-## To Do
-
-- Add Better Support for Halfling Luck and Elven Accuracy special traits
 
 ## Compatibility
 
