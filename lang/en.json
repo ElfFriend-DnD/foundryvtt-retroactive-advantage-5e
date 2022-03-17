@@ -1,0 +1,14 @@
+{
+    "retroactive-advantage-5e": {
+        "settings": {
+            "hideButtons": {
+                "name": "Hide Retroactive Advantage Buttons",
+                "hint": "Show buttons using context menu."
+            }
+        },
+        "context": {
+            "show": "Show Retroactive Advantage",
+            "hide": "Hide Retroactive Advantage"
+        }
+    }
+}

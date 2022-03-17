@@ -12,6 +12,7 @@ class RetroAdvantage5e {
   static initSocket = () => {
     this.SOCKET = socketlib.registerModule(this.MODULE_NAME);
     this.SOCKET.register('handleChatButton', this._handleChatButton);
+    this.SOCKET.register('toggleButtonVis', this._toggleButtonVis);
   }
 
   /**
@@ -211,9 +212,32 @@ class RetroAdvantage5e {
       console.error('A problem occurred with Retroactive Advantage 5e:', err);
     }
   }
+
+  /**
+   * Handles our button clicks from the chat log
+   * @param {string} action 
+   * @param {string} messageId 
+   */
+  static _toggleButtonVis = (messageId) => {
+    const chatMessageLi = document.querySelector(`[data-message-id="${messageId}"]`);
+    const buttons = chatMessageLi.querySelector(`small.retroactive-advantage-buttons`);
+    if (buttons.style.display === "none") buttons.style.display = "";
+    else buttons.style.display = "none";
+  }
+
   
   static init() {
     console.log(`${RetroAdvantage5e.MODULE_NAME} | Initializing ${RetroAdvantage5e.MODULE_TITLE}`);
+
+    game.settings.register(RetroAdvantage5e.MODULE_NAME, "hideButtons", {
+      name: `${RetroAdvantage5e.MODULE_NAME}.settings.hideButtons.name`,
+      hint: `${RetroAdvantage5e.MODULE_NAME}.settings.hideButtons.hint`,
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: false,
+      onChange: () => window.location.reload()
+    });
 
     /**
      * Set up one listener for the whole chat log
@@ -263,7 +287,48 @@ class RetroAdvantage5e {
       `);
 
       messageContent.insertBefore(buttonNode, diceElement);
+
+      // Hide buttons if module setting is enabled
+      if (game.settings.get(RetroAdvantage5e.MODULE_NAME, "hideButtons")) messageContent.querySelector(`small.retroactive-advantage-buttons`).style.display = "none";
     });
+
+    /**
+     * Add button toggle context menu options
+     */
+    if (game.settings.get(RetroAdvantage5e.MODULE_NAME, "hideButtons")) {
+      Hooks.on("getChatLogEntryContext", (html, options) => {
+        options.push(
+          {
+            name: game.i18n.localize(`${RetroAdvantage5e.MODULE_NAME}.context.show`),
+            icon: `<i class="fas fa-dice-d20"></i>`,
+            condition: ([li]) => {
+              const message = game.messages.get(li.dataset.messageId);
+              const ra5eButtons = li.querySelector(`small.retroactive-advantage-buttons`);
+              const vis = ra5eButtons?.style.display === "none";
+              return (message.isOwner || message.isAuthor) && vis;
+            },
+            callback: ([li]) => {
+              const messageId = li.dataset.messageId;
+              RetroAdvantage5e.SOCKET.executeForEveryone("toggleButtonVis", messageId);
+            }
+          },
+          {
+            name: game.i18n.localize(`${RetroAdvantage5e.MODULE_NAME}.context.hide`),
+            icon: `<i class="fas fa-dice-d20"></i>`,
+            condition: ([li]) => {
+              const message = game.messages.get(li.dataset.messageId);
+              const ra5eButtons = li.querySelector(`small.retroactive-advantage-buttons`);
+              const vis = ra5eButtons?.style.display !== "none";
+              return (message.isOwner || message.isAuthor) && vis;
+            },
+            callback: ([li]) => {
+              const messageId = li.dataset.messageId;
+              RetroAdvantage5e.SOCKET.executeForEveryone("toggleButtonVis", messageId);
+            }
+          }
+        );
+      });
+    }
   }
 }
 

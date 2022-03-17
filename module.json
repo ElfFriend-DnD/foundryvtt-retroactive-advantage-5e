@@ -20,6 +20,13 @@
   "styles": [
     "./styles/retroactive-advantage-5e.css"
   ],
+  "languages": [
+    {
+        "lang": "en",
+        "name": "English",
+        "path": "./lang/en.json"
+    }
+  ],
   "dependencies": [
     {
       "name": "socketlib"
