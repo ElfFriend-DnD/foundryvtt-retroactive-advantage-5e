@@ -224,7 +224,6 @@ class RetroAdvantage5e {
     if (buttons.style.display === "none") buttons.style.display = "";
     else buttons.style.display = "none";
   }
-
   
   static init() {
     console.log(`${RetroAdvantage5e.MODULE_NAME} | Initializing ${RetroAdvantage5e.MODULE_TITLE}`);
