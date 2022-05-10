@@ -68,6 +68,7 @@ class RetroAdvantage5e {
     // do stuff to the terms and modifiers
     switch (newAdvMode) {
       case (NORMAL): {
+        d20Term.number = 1;
         d20Term.results = [d20Term.results.shift()]; // keep only the result of the first element of the array
         break;
       }
@@ -77,6 +78,7 @@ class RetroAdvantage5e {
   
         // if this d20Term doesn't already have more than 1 rolled value, add a new one
         if (d20Term.number === 1) {
+          d20Term.number = 2;
           d20Term.roll();
         }
         break;
@@ -87,6 +89,7 @@ class RetroAdvantage5e {
   
         // if this d20Term doesn't already have more than 1 rolled value, add a new one
         if (d20Term.number === 1) {
+          d20Term.number = 2;
           d20Term.roll();
         }
         break;
