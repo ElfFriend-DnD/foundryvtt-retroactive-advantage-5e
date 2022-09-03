@@ -1,8 +1,8 @@
 {
-  "name": "retroactive-advantage-5e",
+  "id": "retroactive-advantage-5e",
   "title": "Retroactive Advantage DnD5e",
   "description": "A module which allows rerolling d20 rolls from chat.",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": "Andrew Krigline",
   "authors": [
     {
@@ -13,21 +13,25 @@
       "patreon": "ElfFriend_DnD"
     }
   ],
-  "system": [ "dnd5e" ],
   "scripts": [
     "./scripts/retroactive-advantage-5e.js"
   ],
   "styles": [
     "./styles/retroactive-advantage-5e.css"
   ],
-  "dependencies": [
-    {
-      "name": "socketlib"
-    }
-  ],
-  "socket": true,
-  "minimumCoreVersion": "9",
-  "compatibleCoreVersion": "9",
+  "relationships": {
+    "systems": [{
+      "id": "dnd5e",
+      "type": "system",
+      "compatibility": {
+        "minimum": "2.0.0"
+      }
+    }]
+  },
+  "compatibility": {
+    "minimum": 10
+  },
+  "socket": false,
   "url": "https://github.com/ElfFriend-DnD/foundryvtt-retroactive-advantage-5e",
   "bugs": "https://github.com/ElfFriend-DnD/foundryvtt-retroactive-advantage-5e/issues",
   "changelog": "https://github.com/ElfFriend-DnD/foundryvtt-retroactive-advantage-5e/releases",

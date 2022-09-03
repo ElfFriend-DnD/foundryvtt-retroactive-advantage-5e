@@ -1,7 +1,6 @@
 class RetroAdvantage5e {
   static MODULE_NAME = "retroactive-advantage-5e";
   static MODULE_TITLE = "Retroactive Advantage DnD5e";
-  static SOCKET;
 
   static log(...args) {
     if (game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.MODULE_NAME)) {
@@ -9,10 +8,6 @@ class RetroAdvantage5e {
     }
   }
 
-  static initSocket = () => {
-    this.SOCKET = socketlib.registerModule(this.MODULE_NAME);
-    this.SOCKET.register('handleChatButton', this._handleChatButton);
-  }
 
   /**
    * Handles creating a new D20Roll instance with the updated roll method and totals based on a given one
@@ -139,15 +134,6 @@ class RetroAdvantage5e {
   }
 
   /**
-   * Requests that the GM execute the message update to bypass permissions issue
-   * @param {*} action 
-   * @param {*} messageId 
-   */
-  static async _handleRequestChatButton(action, messageId) {
-    return this.SOCKET.executeAsGM(this._handleChatButton, action, messageId);
-  }
-
-  /**
    * Handles our button clicks from the chat log
    * @param {string} action 
    * @param {string} messageId 
@@ -165,27 +151,34 @@ class RetroAdvantage5e {
       if (!messageId || !action || !chatMessage) {
         throw new Error('Missing Information')
       }
-  
+
+      const [roll] = chatMessage.rolls;
+
+      if (!(roll instanceof CONFIG.Dice.D20Roll)) {
+        return;
+      }
+
+
       let newD20Roll;
 
       const messageOptions = {
-        userId: chatMessage.data.user,
-        whisper: chatMessage.data.whisper,
-        blind: chatMessage.data.blind,
-        speaker: chatMessage.data.speaker,
+        userId: chatMessage.user,
+        whisper: chatMessage.whisper,
+        blind: chatMessage.blind,
+        speaker: chatMessage.speaker,
       };
   
       switch (action) {
         case 'dis': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, DISADVANTAGE, messageOptions);
+          newD20Roll = await this._makeNewRoll(roll, DISADVANTAGE, messageOptions);
           break;
         }
         case 'norm': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, NORMAL, messageOptions);
+          newD20Roll = await this._makeNewRoll(roll, NORMAL, messageOptions);
           break;
         }
         case 'adv': {
-          newD20Roll = await this._makeNewRoll(chatMessage.roll, ADVANTAGE, messageOptions);
+          newD20Roll = await this._makeNewRoll(roll, ADVANTAGE, messageOptions);
           break;
         }
       }
@@ -202,13 +195,12 @@ class RetroAdvantage5e {
         newMessageData,
       );
 
-      this.log('New stuff d20 roll', { roll: chatMessage.roll, newD20Roll }, {
+      this.log('New stuff d20 roll', { roll: roll, newD20Roll }, {
         chatMessage,
         newMessageData,
         messageUpdate
       });
   
-      // currently seems broken for players without socket workaround
       return chatMessage.update(messageUpdate);
     } catch (err) {
       console.error('A problem occurred with Retroactive Advantage 5e:', err);
@@ -234,15 +226,21 @@ class RetroAdvantage5e {
           return;
         }
 
-        RetroAdvantage5e._handleRequestChatButton(action, messageId);
+        RetroAdvantage5e._handleChatButton(action, messageId);
       });
     });
 
     /**
-     * Adorn any chat message with a d20 roll with our buttons
+     * Adorn any chat message with a single d20 roll with our buttons
      */
     Hooks.on('renderChatMessage', async (chatMessage, [html]) => {
-      if (!(chatMessage.isAuthor || chatMessage.isOwner) || !chatMessage.isRoll || !(chatMessage.roll instanceof CONFIG.Dice.D20Roll)) {
+      if (!(chatMessage.isAuthor || chatMessage.isOwner) || !chatMessage.isRoll) {
+        return;
+      }
+
+      const [roll] = chatMessage.rolls;
+
+      if (!(roll instanceof CONFIG.Dice.D20Roll)) {
         return;
       }
 
@@ -252,7 +250,7 @@ class RetroAdvantage5e {
         ADVANTAGE
       } = CONFIG.Dice.D20Roll.ADV_MODE;
 
-      const advantageMode = chatMessage.roll?.options?.advantageMode;
+      const advantageMode = roll?.options?.advantageMode;
 
       const diceElement = html.querySelector('.dice-roll');
       const messageContent = html.querySelector('.message-content');
@@ -275,5 +273,3 @@ Hooks.on("init", RetroAdvantage5e.init);
 Hooks.once('devModeReady', ({ registerPackageDebugFlag }) => {
   registerPackageDebugFlag(RetroAdvantage5e.MODULE_NAME);
 });
-
-Hooks.once("socketlib.ready", RetroAdvantage5e.initSocket);
