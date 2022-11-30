@@ -26,6 +26,12 @@
       "compatibility": {
         "minimum": "2.0.0"
       }
+    },{
+      "id": "sw5e",
+      "type": "system",
+      "compatibility": {
+        "minimum": "2.0.0"
+      }
     }]
   },
   "compatibility": {
