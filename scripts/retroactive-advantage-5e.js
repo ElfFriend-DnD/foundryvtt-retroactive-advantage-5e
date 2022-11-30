@@ -257,9 +257,9 @@ class RetroAdvantage5e {
 
       const buttonNode = document.createRange().createContextualFragment(`
       <small class="flexrow retroactive-advantage-buttons">
-        <button data-retro-action="dis" ${advantageMode === DISADVANTAGE ? 'disabled' : ''}>${game.i18n.localize('DND5E.Disadvantage')}</button>
-        <button data-retro-action="norm" ${advantageMode === NORMAL ? 'disabled' : ''}>${game.i18n.localize('DND5E.Normal')}</button>
-        <button data-retro-action="adv" ${advantageMode === ADVANTAGE ? 'disabled' : ''}>${game.i18n.localize('DND5E.Advantage')}</button>
+        <button data-retro-action="dis" ${advantageMode === DISADVANTAGE ? 'disabled' : ''}>${game.i18n.localize(`${game.system.id.toUpperCase()}.Disadvantage`)}</button>
+        <button data-retro-action="norm" ${advantageMode === NORMAL ? 'disabled' : ''}>${game.i18n.localize(`${game.system.id.toUpperCase()}.Normal`)}</button>
+        <button data-retro-action="adv" ${advantageMode === ADVANTAGE ? 'disabled' : ''}>${game.i18n.localize(`${game.system.id.toUpperCase()}.Advantage`)}</button>
       </small>
       `);
 
